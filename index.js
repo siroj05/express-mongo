@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';  // Import cors
 import { connectToDatabase, closeConnection } from './db/db.js';
 import dotenv from 'dotenv';
 import users from './routes/usersRoutes.js';
@@ -14,7 +15,15 @@ async function startServer() {
   try {
     // Hubungkan ke database terlebih dahulu
     await connectToDatabase();
-    
+
+    // Gunakan CORS di seluruh aplikasi
+    app.use(cors());  // Jika ingin mengizinkan semua origin
+
+    // Atau, jika ingin mengatur origin tertentu, misalnya hanya dari localhost:3000
+    // app.use(cors({
+    //   origin: 'http://localhost:3000'
+    // }));
+    app.use(express.json({ limit: '10mb' }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 

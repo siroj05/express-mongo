@@ -11,9 +11,7 @@ export async function createPosts(postData) {
     return {
       title: savedPost.title,
       content: savedPost.content,
-      cover: savedPost.cover,
       userId: savedPost.userId,
-      success : true
     };
   } catch (error) {
     console.error("Error creating post:", error);
