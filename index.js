@@ -4,6 +4,7 @@ import { connectToDatabase, closeConnection } from './db/db.js';
 import dotenv from 'dotenv';
 import users from './routes/usersRoutes.js';
 import post from './routes/postsRoutes.js';
+import auth from './routes/auth.js';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ async function startServer() {
     // Routes
     app.use('/api', users);
     app.use('/api', post);
+    app.use('/api', auth);
 
     // Error handling middleware
     app.use((err, req, res, next) => {
