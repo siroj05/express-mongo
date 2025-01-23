@@ -18,28 +18,28 @@ export const getAllUsers = async (req, res) => {
 
 export const registerUser = async (req, res) => {
   const db = getDb()
-  const { firstName, email, password } = req.body
+  const {firstName, email, password } = req.body
 
   try{
-    if(!firstName || !email || !password) {
-      return res.status(400).json({message: "Semua data harus diisi"})
+    if(!firstName | !email || !password) {
+      return res.status(400).json("Semua data harus diisi")
     }
     const collection = db.collection("users")
 
     // validasi email
     const existingUser = await collection.findOne({email})
     if(existingUser){
-      return res.status(400).json({message: "Email sudah terdaftar"})
+      return res.status(400).json("Email sudah terdaftar")
     }
 
     // password di hash
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // simpan ke database
-    const newUser = {firstName, email, password: hashedPassword};
+    const newUser = { firstName, email, password: hashedPassword};
     await collection.insertOne(newUser)
 
-    res.status(201).json({message: "Registrasi berhasil"})
+    res.status(201).json("Registrasi berhasil")
   }catch{
     console.error("Error saat registrasi", error)
     res.status(500).send("Terjadi kesalahan server.")
