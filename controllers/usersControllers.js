@@ -19,9 +19,9 @@ export const getAllUsers = async (req, res) => {
 export const registerUser = async (req, res) => {
   const db = getDb()
   const {firstName, email, password } = req.body
-
   try{
     if(!firstName | !email || !password) {
+      console.log('masuk sini')
       return res.status(400).json("Semua data harus diisi")
     }
     const collection = db.collection("users")
@@ -49,7 +49,7 @@ export const registerUser = async (req, res) => {
 export const LoginUser = async (req, res) => {
   const db = getDb()
   const {email, password} = req.body
-
+  console.log(req.body)
   try {
 
     if(!email || !password){
@@ -71,8 +71,14 @@ export const LoginUser = async (req, res) => {
     }
 
     // buat jwt
-    const token = jwt.sign({id: user._id, email:user.email}, SECRET_KEY, {expiresIn : "1h"})
-    res.status(200).json({message: "Login berhasil.", token})
+    const token = jwt.sign({id: user._id, email:user.email, firstName : user.firstName}, SECRET_KEY, {expiresIn : "1h"})
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 3600 * 1000, // 1 jam
+    }).status(200).json({ message: "Login berhasil." });
   } catch{
     console.error("Error saat login:", error);
     res.status(500).send("Terjadi kesalahan server.");
