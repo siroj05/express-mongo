@@ -84,3 +84,8 @@ export const LoginUser = async (req, res) => {
     res.status(500).send("Terjadi kesalahan server.");
   }
 }
+
+export const logout = async (req, res) => {
+  res.clearCookie('token'); // Hapus cookie token
+  res.status(200).send({ message: 'User logged out successfully', success : true });
+}
