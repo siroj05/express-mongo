@@ -5,8 +5,12 @@ const auth = express.Router()
 
 auth.get("/profile", authenticateToken, (req, res) => {
   res.json({
-    message: "Akses berhasil.",
-    user: req.user, // Data user diambil dari token
+    user: {
+      firstName : req.user.firstName,  
+      email : req.user.email,  
+      id : req.user.id,  
+      success : true
+    }
   });
 })
 

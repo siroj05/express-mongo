@@ -49,7 +49,7 @@ export const registerUser = async (req, res) => {
 export const LoginUser = async (req, res) => {
   const db = getDb()
   const {email, password} = req.body
-  console.log(req.body)
+
   try {
 
     if(!email || !password){
