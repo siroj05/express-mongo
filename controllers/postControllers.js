@@ -5,12 +5,12 @@ import { ObjectId } from "mongodb";
 
 // create post
 export const handleCreatePost = async (req, res) => {
-  let { cover, title, content, userId, createAt } = req.body;
+  let { cover, title, content, userId, createdAt } = req.body;
 
   userId = new ObjectId(userId);
   try {
     // Validasi input
-    if (!cover || !title || !content || !userId || !createAt) {
+    if (!cover || !title || !content || !userId || !createdAt) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -19,7 +19,7 @@ export const handleCreatePost = async (req, res) => {
       title,
       content,
       userId,
-      createAt
+      createdAt
     });
 
     res.status(201).json({
@@ -68,7 +68,7 @@ export const getAllPosts = async (req, res) => {
         userId: 1,
         cover: 1,
         content: 1,
-        createAt: 1,
+        createdAt: 1,
         "userInfo.firstName": 1,
         "userInfo.email": 1,
         "userInfo._id": 1,
@@ -114,7 +114,7 @@ export const getPostByUserId = async (req, res) => {
         userId: 1,
         cover: 1,
         content: 1,
-        createAt: 1,
+        createdAt: 1,
         "userInfo.firstName": 1,
         "userInfo.email": 1,
         "userInfo._id": 1,
@@ -145,9 +145,9 @@ export const deletePost = async (req, res) => {
 
 export const detailPost = async (req, res) => {
   const postId = new ObjectId(req.params.postId)
-  const { userId } = req.body
+  const userId = new ObjectId(req.params.userId)
   const db = getDb()
-  if(!userId){
+  if(!userId || !postId){
     return res.status(401).json({ message: "Tidak diizinkan" });
   }
   const result = await db.collection('posts').findOne({"_id": postId})
@@ -160,4 +160,8 @@ export const detailPost = async (req, res) => {
   } catch (error) {
     res.status(500).send("Internal server error")
   }
+}
+
+export const editPost = async (req, res) => {
+  
 }

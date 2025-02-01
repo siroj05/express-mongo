@@ -7,6 +7,6 @@ post.post("/createPost", handleCreatePost);
 post.get("/posts", getAllPosts);
 post.get("/post/:userId", getPostByUserId);
 post.delete("/deletePost/:postId", deletePost);
-post.get("/detailPost/:postId", detailPost);
+post.get("/detailPost/:postId/:userId", detailPost);
 
 export default post;
