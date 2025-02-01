@@ -5,12 +5,12 @@ import { ObjectId } from "mongodb";
 
 // create post
 export const handleCreatePost = async (req, res) => {
-  let { cover, title, content, userId, createAt, time } = req.body;
+  let { cover, title, content, userId, createAt } = req.body;
 
   userId = new ObjectId(userId);
   try {
     // Validasi input
-    if (!cover || !title || !content || !userId || !createAt || !time) {
+    if (!cover || !title || !content || !userId || !createAt) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -19,8 +19,7 @@ export const handleCreatePost = async (req, res) => {
       title,
       content,
       userId,
-      createAt,
-      time,
+      createAt
     });
 
     res.status(201).json({
@@ -70,7 +69,6 @@ export const getAllPosts = async (req, res) => {
         cover: 1,
         content: 1,
         createAt: 1,
-        time: 1,
         "userInfo.firstName": 1,
         "userInfo.email": 1,
         "userInfo._id": 1,
@@ -117,7 +115,6 @@ export const getPostByUserId = async (req, res) => {
         cover: 1,
         content: 1,
         createAt: 1,
-        time: 1,
         "userInfo.firstName": 1,
         "userInfo.email": 1,
         "userInfo._id": 1,
@@ -135,12 +132,32 @@ export const getPostByUserId = async (req, res) => {
 export const deletePost = async (req, res) => {
   const postId = new ObjectId(req.params.postId)
   const db = getDb();
+
   try {
     const deletedPost = await db.collection('posts').findOneAndDelete({_id : postId})
     if(!deletedPost.value) return res.status(404).json({message : 'Post tidak ditemukan'})
     
     res.json({message : 'Post berhasil dihapus', deletedPost : deletedPost.value} )
   } catch (error) {
+    res.status(500).send("Internal server error")
+  }
+}
+
+export const detailPost = async (req, res) => {
+  const postId = new ObjectId(req.params.postId)
+  const { userId } = req.body
+  const db = getDb()
+  if(!userId){
+    return res.status(401).json({ message: "Tidak diizinkan" });
+  }
+  const result = await db.collection('posts').findOne({"_id": postId})
+  if (!result) {
+    return res.status(404).json({ message: "Post not found" });
+  }
+  res.json(result)
+  try {
     
+  } catch (error) {
+    res.status(500).send("Internal server error")
   }
 }
