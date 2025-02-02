@@ -86,6 +86,10 @@ export const LoginUser = async (req, res) => {
 }
 
 export const logout = async (req, res) => {
-  res.clearCookie('token'); // Hapus cookie token
-  res.status(200).send({ message: 'User logged out successfully', success : true });
-}
+  res.clearCookie("token", { 
+    path: "/", // Path harus sama dengan yang digunakan saat set cookie
+    secure: true,
+    sameSite: "None"
+  }); 
+  res.status(200).send({ message: "User logged out successfully", success: true });
+};
