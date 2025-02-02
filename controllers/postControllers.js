@@ -5,12 +5,12 @@ import { ObjectId } from "mongodb";
 
 // create post
 export const handleCreatePost = async (req, res) => {
-  let { cover, title, content, userId, createdAt } = req.body;
+  let { cover, title, content, userId } = req.body;
 
   userId = new ObjectId(userId);
   try {
     // Validasi input
-    if (!cover || !title || !content || !userId || !createdAt) {
+    if (!cover || !title || !content || !userId ) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -19,7 +19,7 @@ export const handleCreatePost = async (req, res) => {
       title,
       content,
       userId,
-      createdAt
+      createdAt : new Date()
     });
 
     res.status(201).json({
@@ -162,6 +162,36 @@ export const detailPost = async (req, res) => {
   }
 }
 
-export const editPost = async (req, res) => {
-  
+// update
+export const updatePost = async (req, res) => {
+  const { _id, cover, title, content, userId } = req.body
+  const currentUserId = req.params.currentUserId
+  const postId = new ObjectId(_id)
+  const db = getDb()
+
+  if(currentUserId !== userId) return res.status(401).json({message : "Unauthorized"})
+
+  try {
+    const collection = db.collection('posts')
+    const result = await collection.updateOne(
+      {
+        _id : postId
+      },
+      {
+        $set : {
+          title,
+          cover,
+          content,
+          userId : new ObjectId(userId),
+          updatedAt : new Date()
+        }
+      }
+    )
+
+    if(result.modifiedCount === 0) return res.status(404).json({message : "Gagal Diperbarui"})
+    if (result.modifiedCount === 0) {return res.status(400).json({ message: "Data tidak berubah" })}
+    res.status(200).json({message : "Berhasil diperbarui"})
+  } catch (error) {
+    res.status(500).send("Internal server errro")
+  }
 }
