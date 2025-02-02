@@ -37,6 +37,9 @@ async function startServer() {
     app.use("/api", users);
     app.use("/api", post);
     app.use("/api", auth);
+    app.get("/", (req, res) => {
+      res.json({ message: "Hello World" })
+    })
 
     // Error handling middleware
     app.use((err, req, res, next) => {
