@@ -75,7 +75,11 @@ export const getAllPosts = async (req, res) => {
       },
     };
 
-    const pipeline = [lookupUserInfo, unwindUserInfo, rawData];
+    const sortByCreatedAt = {
+      $sort: { createdAt: -1 }, // -1 descending, 1 ascending
+    };
+
+    const pipeline = [lookupUserInfo, unwindUserInfo, rawData, sortByCreatedAt];
 
     const result = await collection.aggregate(pipeline).toArray();
     res.json(result); // Kirim hasil ke frontend
