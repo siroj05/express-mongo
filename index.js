@@ -20,7 +20,7 @@ async function startServer() {
     // Gunakan CORS di seluruh aplikasi
     app.use(
       cors({
-        origin: "http://localhost:5173", // Ganti dengan URL frontend Anda
+        origin: "https://siroj-hoyolab-clone.netlify.app", // Ganti dengan URL frontend Anda
         credentials: true, // Izinkan pengiriman cookie
       })
     );
