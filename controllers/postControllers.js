@@ -10,7 +10,7 @@ export const handleCreatePost = async (req, res) => {
   userId = new ObjectId(userId);
   try {
     // Validasi input
-    if (!cover || !title || !content || !userId ) {
+    if (!cover || !title || !content || !userId) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -19,7 +19,7 @@ export const handleCreatePost = async (req, res) => {
       title,
       content,
       userId,
-      createdAt : new Date()
+      createdAt: new Date(),
     });
 
     res.status(201).json({
@@ -91,20 +91,20 @@ export const getAllPosts = async (req, res) => {
 
 // get all post by user id
 export const getPostByUserId = async (req, res) => {
-  const userId = new ObjectId(req.params.userId)
+  const userId = new ObjectId(req.params.userId);
   const db = getDb();
   try {
-    const collection = db.collection("posts")
+    const collection = db.collection("posts");
     // const result = await collection.find({"userId" : userId}).toArray()
-    const match = {$match : {userId : userId}}
+    const match = { $match: { userId: userId } };
     const lookup = {
-      $lookup : {
-        from : "users",
-        localField : "userId",
-        foreignField : "_id",
-        as : "userInfo"
-      }
-    }
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "userInfo",
+      },
+    };
     const unwindUserInfo = {
       $unwind: {
         path: "$userInfo", // Membuka array userInfo
@@ -125,77 +125,120 @@ export const getPostByUserId = async (req, res) => {
       },
     };
     const pipeline = [match, lookup, unwindUserInfo, rawData];
-    const result = await collection.aggregate(pipeline).toArray()
-    res.json(result)
+    const result = await collection.aggregate(pipeline).toArray();
+    res.json(result);
   } catch (error) {
-    res.status(500).send("Internal server error")
+    res.status(500).send("Internal server error");
   }
 };
 
 // delete post by post id
 export const deletePost = async (req, res) => {
-  const postId = new ObjectId(req.params.postId)
+  const postId = new ObjectId(req.params.postId);
   const db = getDb();
 
   try {
-    const deletedPost = await db.collection('posts').findOneAndDelete({_id : postId})
-    if(!deletedPost.value) return res.status(404).json({message : 'Post tidak ditemukan'})
-    
-    res.json({message : 'Post berhasil dihapus', deletedPost : deletedPost.value} )
+    const deletedPost = await db
+      .collection("posts")
+      .findOneAndDelete({ _id: postId });
+    if (!deletedPost.value)
+      return res.status(404).json({ message: "Post tidak ditemukan" });
+
+    res.json({
+      message: "Post berhasil dihapus",
+      deletedPost: deletedPost.value,
+    });
   } catch (error) {
-    res.status(500).send("Internal server error")
+    res.status(500).send("Internal server error");
   }
-}
+};
 
 export const detailPost = async (req, res) => {
-  const postId = new ObjectId(req.params.postId)
-  const userId = new ObjectId(req.params.userId)
-  const db = getDb()
-  if(!userId || !postId){
+  const postId = new ObjectId(req.params.postId);
+  const db = getDb();
+  if (!postId) {
     return res.status(401).json({ message: "Tidak diizinkan" });
   }
-  const result = await db.collection('posts').findOne({"_id": postId})
-  if (!result) {
+  const collection = await db.collection("posts")
+  const match = {
+    $match : { _id : postId}
+  }
+  const lookupUserInfo = {
+    $lookup: {
+      from: "users", // Nama koleksi yang akan di-join
+      localField: "userId", // Field di posts
+      foreignField: "_id", // Field di users
+      as: "userInfo", // Nama field hasil join
+    },
+  };
+
+  // Tahap untuk membuka array userInfo menjadi objek
+  const unwindUserInfo = {
+    $unwind: {
+      path: "$userInfo", // Membuka array userInfo
+      preserveNullAndEmptyArrays: true, // Tetap sertakan data meskipun user tidak ditemukan
+    },
+  };
+
+  const rawData = {
+    $project: {
+      _id: 1,
+      title: 1,
+      userId: 1,
+      cover: 1,
+      content: 1,
+      createdAt: 1,
+      "userInfo.firstName": 1,
+      "userInfo.email": 1,
+      "userInfo._id": 1,
+    },
+  };
+  const pipeline = [match, lookupUserInfo, unwindUserInfo, rawData];
+  const result = await collection.aggregate(pipeline).toArray()
+  if (!result.length) {
     return res.status(404).json({ message: "Post not found" });
   }
-  res.json(result)
+  res.json(result[0]);
   try {
-    
   } catch (error) {
-    res.status(500).send("Internal server error")
+    res.status(500).send("Internal server error");
   }
-}
+};
 
 // update
 export const updatePost = async (req, res) => {
-  const { _id, cover, title, content, userId } = req.body
-  const currentUserId = req.params.currentUserId
-  const postId = new ObjectId(_id)
-  const db = getDb()
+  const { _id, cover, title, content, userId } = req.body;
+  const currentUserId = req.params.currentUserId;
+  const postId = new ObjectId(_id);
+  const db = getDb();
 
-  if(currentUserId !== userId) return res.status(401).json({message : "Unauthorized"})
+  if (currentUserId !== userId)
+    return res.status(401).json({ message: "Unauthorized" });
 
   try {
-    const collection = db.collection('posts')
+    const collection = db.collection("posts");
     const result = await collection.updateOne(
       {
-        _id : postId
+        _id: postId,
       },
       {
-        $set : {
+        $set: {
           title,
           cover,
           content,
-          userId : new ObjectId(userId),
-          updatedAt : new Date()
-        }
+          userId: new ObjectId(userId),
+          updatedAt: new Date(),
+        },
       }
-    )
+    );
 
-    if(result.modifiedCount === 0) return res.status(404).json({message : "Gagal Diperbarui"})
-    if (result.modifiedCount === 0) {return res.status(400).json({ message: "Data tidak berubah" })}
-    res.status(200).json({message : "Berhasil diperbarui"})
+    if (result.modifiedCount === 0)
+      return res.status(404).json({ message: "Gagal Diperbarui" });
+    if (result.modifiedCount === 0) {
+      return res.status(400).json({ message: "Data tidak berubah" });
+    }
+    res.status(200).json({ message: "Berhasil diperbarui" });
   } catch (error) {
-    res.status(500).send("Internal server errro")
+    res.status(500).send("Internal server errro");
   }
-}
+};
