@@ -180,6 +180,65 @@ export const detailPost = async (req, res) => {
     },
   };
 
+
+  const lookupComments = {
+    $lookup : {
+      from : "comments",
+      localField : "_id",
+      foreignField : "postId",
+      as : "comments",
+    }
+  }
+
+  const sortComments = {
+    $addFields: {
+      comments: {
+        $sortArray: {
+          input: "$comments",
+          sortBy: { createdAt: -1 }, // -1 untuk DESC, 1 untuk ASC
+        },
+      },
+    },
+  };
+
+  const unwindComments = {
+    $unwind: {
+      path: "$comments",
+      preserveNullAndEmptyArrays: true,
+    },
+  };
+
+  const lookupCommentUser = {
+    $lookup: {
+      from: "users",
+      localField: "comments.userId",
+      foreignField: "_id",
+      as: "comments.userInfo",
+    },
+  };
+
+  const unwindCommentUser = {
+    $unwind: {
+      path: "$comments.userInfo",
+      preserveNullAndEmptyArrays: true,
+    },
+  };
+
+  const groupComments = {
+    $group: {
+      _id: "$_id",
+      title: { $first: "$title" },
+      userId: { $first: "$userId" },
+      cover: { $first: "$cover" },
+      content: { $first: "$content" },
+      createdAt: { $first: "$createdAt" },
+      userInfo: { $first: "$userInfo" },
+      comments: { $push: "$comments" }, // Kumpulkan kembali komentar yang diunwind
+    },
+  };
+
+
+
   const rawData = {
     $project: {
       _id: 1,
@@ -188,12 +247,26 @@ export const detailPost = async (req, res) => {
       cover: 1,
       content: 1,
       createdAt: 1,
-      "userInfo.firstName": 1,
-      "userInfo.email": 1,
-      "userInfo._id": 1,
+      "userInfo.firstName" : 1,
+      "userInfo.email" : 1,
+      "userInfo._id" : 1,
+      comments : 1
     },
   };
-  const pipeline = [match, lookupUserInfo, unwindUserInfo, rawData];
+  
+  const pipeline = [
+    match, 
+    lookupUserInfo, 
+    unwindUserInfo, 
+    lookupComments,
+    sortComments,
+    unwindComments,
+    lookupCommentUser, 
+    unwindCommentUser,
+    groupComments,
+    rawData]
+  ;
+
   const result = await collection.aggregate(pipeline).toArray()
   if (!result.length) {
     return res.status(404).json({ message: "Post not found" });
