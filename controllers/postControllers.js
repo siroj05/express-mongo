@@ -233,7 +233,32 @@ export const detailPost = async (req, res) => {
       content: { $first: "$content" },
       createdAt: { $first: "$createdAt" },
       userInfo: { $first: "$userInfo" },
-      comments: { $push: "$comments" }, // Kumpulkan kembali komentar yang diunwind
+      comments: {
+        $push: {
+          $ifNull: ["$comments", []], // Pastikan jika tidak ada komentar, hasil tetap []
+        },
+      },
+    },
+  };
+
+  const projectData = {
+    $project: {
+      _id: 1,
+      title: 1,
+      userId: 1,
+      cover: 1,
+      content: 1,
+      createdAt: 1,
+      "userInfo.firstName": 1,
+      "userInfo.email": 1,
+      "userInfo._id": 1,
+      comments: {
+        $filter: {
+          input: "$comments",
+          as: "comment",
+          cond: { $ne: ["$$comment", {}] }, // Hapus elemen kosong jika ada
+        },
+      },
     },
   };
 
@@ -250,7 +275,13 @@ export const detailPost = async (req, res) => {
       "userInfo.firstName" : 1,
       "userInfo.email" : 1,
       "userInfo._id" : 1,
-      comments : 1
+      comments: {
+        $filter: {
+          input: "$comments",
+          as: "comment",
+          cond: { $ne: ["$$comment", {}] }, // Hapus elemen kosong jika ada
+        },
+      },
     },
   };
   
