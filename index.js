@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import users from "./routes/usersRoutes.js";
 import post from "./routes/postsRoutes.js";
 import auth from "./routes/auth.js";
+import comment from "./routes/commentsRoutes.js";
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ async function startServer() {
     app.use("/api", users);
     app.use("/api", post);
     app.use("/api", auth);
+    app.use("/api", comment);
     app.get("/", (req, res) => {
       res.json({ message: "Hello World" })
     })

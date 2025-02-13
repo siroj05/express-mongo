@@ -180,7 +180,68 @@ export const detailPost = async (req, res) => {
     },
   };
 
-  const rawData = {
+
+  const lookupComments = {
+    $lookup : {
+      from : "comments",
+      localField : "_id",
+      foreignField : "postId",
+      as : "comments",
+    }
+  }
+
+  const sortComments = {
+    $addFields: {
+      comments: {
+        $sortArray: {
+          input: "$comments",
+          sortBy: { createdAt: -1 }, // -1 untuk DESC, 1 untuk ASC
+        },
+      },
+    },
+  };
+
+  const unwindComments = {
+    $unwind: {
+      path: "$comments",
+      preserveNullAndEmptyArrays: true,
+    },
+  };
+
+  const lookupCommentUser = {
+    $lookup: {
+      from: "users",
+      localField: "comments.userId",
+      foreignField: "_id",
+      as: "comments.userInfo",
+    },
+  };
+
+  const unwindCommentUser = {
+    $unwind: {
+      path: "$comments.userInfo",
+      preserveNullAndEmptyArrays: true,
+    },
+  };
+
+  const groupComments = {
+    $group: {
+      _id: "$_id",
+      title: { $first: "$title" },
+      userId: { $first: "$userId" },
+      cover: { $first: "$cover" },
+      content: { $first: "$content" },
+      createdAt: { $first: "$createdAt" },
+      userInfo: { $first: "$userInfo" },
+      comments: {
+        $push: {
+          $ifNull: ["$comments", []], // Pastikan jika tidak ada komentar, hasil tetap []
+        },
+      },
+    },
+  };
+
+  const projectData = {
     $project: {
       _id: 1,
       title: 1,
@@ -191,9 +252,52 @@ export const detailPost = async (req, res) => {
       "userInfo.firstName": 1,
       "userInfo.email": 1,
       "userInfo._id": 1,
+      comments: {
+        $filter: {
+          input: "$comments",
+          as: "comment",
+          cond: { $ne: ["$$comment", {}] }, // Hapus elemen kosong jika ada
+        },
+      },
     },
   };
-  const pipeline = [match, lookupUserInfo, unwindUserInfo, rawData];
+
+
+
+  const rawData = {
+    $project: {
+      _id: 1,
+      title: 1,
+      userId: 1,
+      cover: 1,
+      content: 1,
+      createdAt: 1,
+      "userInfo.firstName" : 1,
+      "userInfo.email" : 1,
+      "userInfo._id" : 1,
+      comments: {
+        $filter: {
+          input: "$comments",
+          as: "comment",
+          cond: { $ne: ["$$comment", {}] }, // Hapus elemen kosong jika ada
+        },
+      },
+    },
+  };
+  
+  const pipeline = [
+    match, 
+    lookupUserInfo, 
+    unwindUserInfo, 
+    lookupComments,
+    sortComments,
+    unwindComments,
+    lookupCommentUser, 
+    unwindCommentUser,
+    groupComments,
+    rawData]
+  ;
+
   const result = await collection.aggregate(pipeline).toArray()
   if (!result.length) {
     return res.status(404).json({ message: "Post not found" });
