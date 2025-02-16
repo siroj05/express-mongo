@@ -143,7 +143,7 @@ export const deletePost = async (req, res) => {
       .findOneAndDelete({ _id: postId });
     if (!deletedPost.value)
       return res.status(404).json({ message: "Post tidak ditemukan" });
-
+    await db.collection("comments").deleteMany({postId})
     res.json({
       message: "Post berhasil dihapus",
       deletedPost: deletedPost.value,
@@ -240,28 +240,6 @@ export const detailPost = async (req, res) => {
       },
     },
   };
-
-  const projectData = {
-    $project: {
-      _id: 1,
-      title: 1,
-      userId: 1,
-      cover: 1,
-      content: 1,
-      createdAt: 1,
-      "userInfo.firstName": 1,
-      "userInfo.email": 1,
-      "userInfo._id": 1,
-      comments: {
-        $filter: {
-          input: "$comments",
-          as: "comment",
-          cond: { $ne: ["$$comment", {}] }, // Hapus elemen kosong jika ada
-        },
-      },
-    },
-  };
-
 
 
   const rawData = {
