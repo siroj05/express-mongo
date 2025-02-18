@@ -41,8 +41,8 @@ export const handleCreatePost = async (req, res) => {
 export const getAllPosts = async (req, res) => {
   const db = getDb();
   try {
+    const {search} = req.query
     const collection = db.collection("posts");
-
     // Tahap untuk mengonversi userId menjadi ObjectId
     const lookupUserInfo = {
       $lookup: {
@@ -53,6 +53,12 @@ export const getAllPosts = async (req, res) => {
       },
     };
 
+    const matchSearchFirstName = search ? {
+      $match : {
+        "userInfo.firstName" : { $regex: search, $options : "i"}, // ini buat case-sensitive
+      },
+    } : null
+    console.log(matchSearchFirstName)
     // Tahap untuk membuka array userInfo menjadi objek
     const unwindUserInfo = {
       $unwind: {
@@ -60,6 +66,8 @@ export const getAllPosts = async (req, res) => {
         preserveNullAndEmptyArrays: true, // Tetap sertakan data meskipun user tidak ditemukan
       },
     };
+
+    
 
     const rawData = {
       $project: {
@@ -79,7 +87,13 @@ export const getAllPosts = async (req, res) => {
       $sort: { createdAt: -1 }, // -1 descending, 1 ascending
     };
 
-    const pipeline = [lookupUserInfo, unwindUserInfo, rawData, sortByCreatedAt];
+    const pipeline = [lookupUserInfo, unwindUserInfo];
+
+    if(matchSearchFirstName){
+      pipeline.push(matchSearchFirstName)
+    }
+
+    pipeline.push(rawData, sortByCreatedAt)
 
     const result = await collection.aggregate(pipeline).toArray();
     res.json(result); // Kirim hasil ke frontend
