@@ -58,7 +58,6 @@ export const getAllPosts = async (req, res) => {
         "userInfo.firstName" : { $regex: search, $options : "i"}, // ini buat case-sensitive
       },
     } : null
-    console.log(matchSearchFirstName)
     // Tahap untuk membuka array userInfo menjadi objek
     const unwindUserInfo = {
       $unwind: {
